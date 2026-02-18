@@ -1,0 +1,29 @@
+name: NodeSeek Checkin
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 每天 UTC 01:00（新加坡 09:00）
+  workflow_dispatch:       # 支持手动运行
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      - name: Run checkin
+        run: node checkin.js
+        env:
+          NODESEEK_COOKIE: ${{ secrets.NODESEEK_COOKIE }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
