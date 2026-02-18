@@ -79,15 +79,14 @@ async function sendTG(message) {
 
     log("📡 发送签到请求...");
     const result = await page.evaluate(async () => {
-      const resp = await fetch("/api/attendance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Requested-With": "XMLHttpRequest"
-        },
-        body: "random=true"
-      });
-
+      const resp = await fetch("https://www.nodeseek.com/api/attendance?random=true", {
+  method: "POST",
+  headers: {
+    "Accept": "application/json, text/plain, */*",
+    "X-Requested-With": "XMLHttpRequest"
+  }
+});
+ 
       return {
         status: resp.status,
         text: await resp.text()
