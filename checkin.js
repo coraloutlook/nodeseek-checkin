@@ -9,6 +9,11 @@ function log(msg) {
   console.log(`[${new Date().toISOString()}] ${msg}`);
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 async function sendTG(message) {
   if (!TG_TOKEN || !TG_CHAT_ID) {
     log("⚠️ 未配置 TG，跳过通知");
@@ -70,7 +75,7 @@ async function sendTG(message) {
     await page.goto(NODESEEK_URL, { waitUntil: "networkidle2" });
 
     log("⏳ 等待页面稳定...");
-    await page.waitForTimeout(3000);
+    await sleep(3123);
 
     log("📡 发送签到请求...");
     const result = await page.evaluate(async () => {
