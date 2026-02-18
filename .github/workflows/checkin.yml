@@ -2,12 +2,13 @@ name: NodeSeek Checkin
 
 on:
   schedule:
-    - cron: "0 1 * * *"   # 每天 UTC 01:00（新加坡 09:00）
-  workflow_dispatch:       # 支持手动运行
+    - cron: "5 4 * * *"   # UTC 04:05 → 中国时间 12:05
+  workflow_dispatch:
 
 jobs:
   checkin:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -17,6 +18,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Random delay (0–15 min)
+        run: |
+          delay=$((RANDOM % 900))   # 0–900 秒（15分钟）
+          echo "延迟 ${delay} 秒后执行签到..."
+          sleep $delay
 
       - name: Install deps
         run: npm install
