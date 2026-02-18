@@ -77,21 +77,30 @@ async function sendTG(message) {
     log("⏳ 等待页面稳定...");
     await sleep(3123);
 
+    const title = await page.title();
+log(`📄 当前页面标题: ${title}`);
+
+if (title.includes("Just a moment") || title.includes("Attention")) {
+  log("⚠️ 遇到 Cloudflare Challenge");
+  await sendTG("⚠️ NodeSeek 被 Cloudflare Challenge 拦截");
+  await browser.close();
+  process.exit(1);
+}
+
+    
     log("📡 发送签到请求...");
     const result = await page.evaluate(async () => {
-      const resp = await fetch("https://www.nodeseek.com/api/attendance?random=true", {
-  method: "POST",
-  headers: {
-    "Accept": "application/json, text/plain, */*",
-    "X-Requested-With": "XMLHttpRequest"
-  }
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://www.nodeseek.com/api/attendance?random=true", false);
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+  xhr.send("");
+
+  return {
+    status: xhr.status,
+    text: xhr.responseText
+  };
 });
- 
-      return {
-        status: resp.status,
-        text: await resp.text()
-      };
-    });
+
 
     log(`📨 接口状态码: ${result.status}`);
     log(`📄 返回内容: ${result.text}`);
