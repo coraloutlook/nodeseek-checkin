@@ -1,141 +1,115 @@
-# 🚀 NodeSeek 自动签到助手
+🚀 NodeSeek 自动签到 Worker
 
-一个基于 **GitHub Actions + Puppeteer** 的 NodeSeek 自动签到工具。
+基于 Cloudflare Workers 实现的 NodeSeek 自动签到脚本，支持：
 
-无需 VPS / 服务器，即可每天自动签到。
+⏰ 定时自动签到（随机概率触发）
 
----
+🖱 手动触发签到
 
-## ✨ 功能特点
+📩 Telegram 通知结果
 
-- ✅ 自动每日签到
-- ✅ 真实浏览器模拟（Puppeteer）
-- ✅ 可绕过 Cloudflare Challenge
-- ✅ Telegram 通知
-- ✅ GitHub Actions 免费运行
-- ✅ 支持手动触发
+🧠 KV 防重复签到锁
 
----
+✨ 功能说明
+⏰ 自动签到机制
 
-## 🧠 工作原理
+Worker 使用 scheduled 事件：
 
-GitHub Actions 定时运行  
-→ 启动 Chromium 浏览器  
-→ 注入登录 Cookie  
-→ 发送签到请求  
-→ 推送 Telegram 通知  
+仅在指定 UTC 时间段执行
 
----
+每日只尝试一次（KV 锁）
 
-# 📦 使用教程
+随机 25% 概率触发
 
----
+成功 / 失败均发送 TG 通知
 
-## 1️⃣ Fork 本仓库
+START_HOUR = 0   // UTC 00:00 → 新加坡 08:00
+END_HOUR   = 4   // UTC 04:00 → 新加坡 12:00
+🖱 手动签到入口
 
-点击右上角 **Fork** 按钮。
+访问：
 
----
+https://你的worker域名/s
 
-## 2️⃣ 设置 Repository Secrets（重要）
+返回签到执行结果。
 
+📩 Telegram 测试入口
 
-添加以下参数：
+访问：
 
----
+https://你的worker域名/tg
 
-### 🔐 必填 Secrets
+发送测试消息到 Telegram。
 
-| Secret 名称 | 说明 | 示例 |
-|------------|------|------|
-| `NODESEEK_COOKIE` | 浏览器登录后的完整 Cookie | `session=xxx; fog=xxx; smac=xxx;` |
-| `TG_BOT_TOKEN` | Telegram 机器人 Token | `123456:ABCxxxxx` |
-| `TG_CHAT_ID` | Telegram 聊天 ID | `123456789` |
+🔧 环境变量配置
 
----
+在 Cloudflare Worker → Settings → Variables 中添加：
 
-## 🧾 如何获取 NODESEEK_COOKIE
+变量名	必填	说明
+NODESEEK_COOKIE	✅	NodeSeek 登录 Cookie
+TG_BOT_TOKEN	❌	Telegram Bot Token
+TG_CHAT_ID	❌	Telegram Chat ID
+USER_AGENT	❌	自定义 UA（可不填）
+🍪 获取 NodeSeek Cookie
 
-1. 打开 NodeSeek 并确保已登录  
-2. 按 F12 → Application  
-3. 点击 Cookies → www.nodeseek.com  
-4. 复制所有 Cookie 拼成一行，例如： session=xxx; fog=xxx; smac=xxx;
+登录 https://www.nodeseek.com
 
+打开浏览器开发者工具 → Network
 
-⚠️ 不要漏掉分号
+找任意请求 → Headers → Cookie
 
----
+复制完整 Cookie 填入 Worker
 
-## 🤖 如何获取 Telegram 参数
+⚠ 务必保密 Cookie
 
-### 获取 BOT TOKEN
+🧠 KV 绑定（必须）
 
-1. Telegram 搜索 `@BotFather`
-2. 发送 `/newbot`
-3. 按提示创建
-4. 得到： 123456:ABCxxxxxx
+用于每日签到锁。
 
+Worker → Settings → KV Namespace Bindings：
 
+Binding name: KV
+Namespace: 你的KV
+⏰ Cron 触发器示例
 
----
+Worker → Triggers → Cron：
 
-### 获取 CHAT ID
+*/20 0-4 * * *
 
-浏览器访问：
-https://api.telegram.org/bot你的BOT_TOKEN/getUpdates
+说明：
 
-给机器人发送一条消息，然后刷新页面，找到：
+UTC 00:00–04:59
 
-"chat": {
-"id": 123456789
-}
+每 20 分钟触发一次
 
+实际签到仍受概率控制
 
-这个数字就是你的 `TG_CHAT_ID`
+📩 Telegram Bot 获取方法
 
----
+1️⃣ 创建 Bot
+👉 https://t.me/BotFather
 
-## 3️⃣ 启用 GitHub Actions
+2️⃣ 获取 Chat ID
+👉 https://t.me/userinfobot
 
-进入：
-Actions → Enable workflows  → NodeSeek Checkin → Run workflow
+✅ 成功通知示例
+✅ NodeSeek签到请求完成
+状态: 200
+{"success":true}
+❌ 失败通知示例
+❌ NodeSeek签到失败
+状态: 403
+未登录或Cookie失效
+⚠ 注意事项
 
-日志会显示：
+Cookie 失效会导致签到失败
 
-- 浏览器启动状态
-- Cookie 注入情况
-- HTTP 状态码
-- 接口返回内容
-- 是否已签到
+Worker 免费额度完全够用
 
----
+建议配合随机概率防风控
 
-## ⚠️ 常见问题
+KV 锁避免重复签到
 
-### 1️⃣ 返回 401
-
-Cookie 已过期，请重新复制更新。
-
----
-
-### 2️⃣ 返回 "Enable JavaScript and cookies"
-
-被 Cloudflare Challenge 拦截，请重新运行或更新 Cookie。
-
----
-
-### 3️⃣ 返回 500 + 已完成签到
-
-代表今天已经签到成功。
-
----
-
-## 📜 License
+📜 License
 
 MIT License
-
----
-
-## ⚠️ 免责声明
-
-本项目仅供学习自动化技术使用，请遵守 NodeSeek 平台相关规定。
