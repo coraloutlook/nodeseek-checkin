@@ -91,7 +91,7 @@ if (title.includes("Just a moment") || title.includes("Attention")) {
     log("📡 发送签到请求...");
     const result = await page.evaluate(async () => {
   const xhr = new XMLHttpRequest();
-  xhr.open("POST", "https://www.nodeseek.com/api/attendance?random=true", false);
+  xhr.open("POST", "https://www.nodeseek.com/api/attendance", false);
   xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
   xhr.send("");
 
